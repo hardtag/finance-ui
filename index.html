@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Финансовый Дашборд</title><script src="https://telegram.org/js/telegram-web-app.js"></script>
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><title>Финансовый Дашборд</title><script src="https://telegram.org/js/telegram-web-app.js"></script>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
 body { background: radial-gradient(circle at 85% 22%, rgba(45,212,191,0.12), transparent 42%), radial-gradient(circle at 15% 75%, rgba(255,69,58,0.08), transparent 45%), #141619; color: #f1f5f9; padding: 12px; max-width: 440px; margin: 0 auto; font-size: 13px; line-height: 1.4; }
@@ -9,7 +9,7 @@ body { background: radial-gradient(circle at 85% 22%, rgba(45,212,191,0.12), tra
 .flow-switch { background: rgba(14,16,20,0.78); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2px; display: flex; gap: 4px; margin-bottom: 10px; } .flow-btn { flex: 1; text-align: center; padding: 6px 0; border-radius: 9px; cursor: pointer; font-weight: 600; font-size: 11.5px; color: #94a3b8; transition: .2s; } .flow-btn.active-exp { background: rgba(255,69,58,0.2); color: #ff6961; border: 1px solid rgba(255,69,58,0.4); box-shadow: 0 0 10px rgba(255,69,58,0.2); } .flow-btn.active-inc { background: rgba(16,185,129,0.2); color: #34d399; border: 1px solid rgba(16,185,129,0.4); box-shadow: 0 0 10px rgba(16,185,129,0.2); }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; } .rings-box { display: flex; flex-direction: column; align-items: center; justify-content: center; } .pool-box { display: flex; flex-direction: column; justify-content: space-between; gap: 6px; }
 .badge { display: inline-flex; align-items: center; padding: 3px 8px; border-radius: 999px; font-weight: 600; font-size: 11px; width: fit-content; } .b-green { background: rgba(16,185,129,0.14); color: #34d399; border: 1px solid rgba(16,185,129,0.4); box-shadow: 0 0 12px rgba(16,185,129,0.18); } .b-red { background: rgba(255,69,58,0.14); color: #ff6961; border: 1px solid rgba(255,69,58,0.4); box-shadow: 0 0 12px rgba(255,69,58,0.18); }
-.cat-item { display: flex; flex-direction: column; padding: 7px 8px; border-radius: 12px; cursor: pointer; transition: background .15s; margin-bottom: 4px; } .cat-item:hover, .cat-item.active { background: rgba(255,255,255,0.06); }
+.cat-item { display: flex; flex-direction: column; padding: 7px 8px; border-radius: 12px; cursor: pointer; transition: all .15s ease; margin-bottom: 4px; border: 1px solid transparent; } .cat-item:hover { background: rgba(255,255,255,0.06); } .cat-item.active { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); box-shadow: inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 10px rgba(0,0,0,0.3); }
 .ico-box { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)); border: 1px solid rgba(255,255,255,0.18); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; font-size: 14px; }
 .bar-track { height: 5px; background: #14171c; border-radius: 3px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.6); overflow: hidden; margin-top: 5px; width: 100%; } .bar-fill { height: 100%; border-radius: 3px; }
 .chart-box { width: 100%; height: auto; position: relative; } svg text { fill: #94a3b8; font-size: 8px; } .filter-chip { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28); color: #fff; padding: 3px 9px; border-radius: 7px; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
@@ -20,6 +20,7 @@ body { background: radial-gradient(circle at 85% 22%, rgba(45,212,191,0.12), tra
 <script>let D = null, tab = 'm'; let flow = 'exp'; let selCat = null, selDay = null, selMonth = null, showAllMonths = false; const fullNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const fmt = n => Math.round(n).toLocaleString('ru-RU'), fmtF = n => n.toLocaleString('ru-RU', {minimumFractionDigits: 1, maximumFractionDigits: 1});
 const ico = e => e === '🛒' ? `<span style="filter:grayscale(1) invert(1) brightness(1.85) drop-shadow(0 0 2px rgba(255,255,255,0.35))">${e}</span>` : e;
+const getCatCol = (i, f) => { if (i === null || i === undefined) return f === 'inc' ? '#10b981' : '#ff453a'; if (f === 'inc') return (D?.inc_cats || [])[i]?.[3] || '#10b981'; return D?.cats?.[i]?.[4] || '#3b82f6'; };
 async function loadData() {
 try {
 const hp = new URLSearchParams(location.hash.replace(/^#/, '')), sp = new URLSearchParams(location.search);
@@ -32,13 +33,18 @@ let b64 = h.replace(/-/g, '+').replace(/_/g, '/'); while (b64.length % 4) b64 +=
 const bin = atob(b64), bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
 const ds = new DecompressionStream('deflate-raw'), w = ds.writable.getWriter(); w.write(bytes); w.close(); D = JSON.parse(await new Response(ds.readable).text());
 }
-} catch (e) { console.error('Decode error:', e); document.getElementById('app').innerHTML = `<div class="bento" style="text-align:center;padding:24px 12px;margin:20px 0"><div style="font-size:24px;margin-bottom:8px">⚠️</div><div style="font-weight:700;color:#ff6961;margin-bottom:6px">Не удалось загрузить данные</div><div class="muted" style="font-size:11px;margin-bottom:12px">${e.message||e}</div><button onclick="location.reload()" style="background:#2e333d;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer">Повторить</button></div>`; } finally { window.Telegram?.WebApp?.ready(); window.Telegram?.WebApp?.expand(); if (D) render(); }
+} catch (e) { console.error('Decode error:', e); document.getElementById('app').innerHTML = `<div class="bento" style="text-align:center;padding:24px 12px;margin:20px 0"><div style="font-size:24px;margin-bottom:8px">⚠️</div><div style="font-weight:700;color:#ff6961;margin-bottom:6px">Не удалось загрузить данные</div><div class="muted" style="font-size:11px;margin-bottom:12px">${e.message||e}</div><button onclick="location.reload()" style="background:#2e333d;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer">Повторить</button></div>`; } finally {
+window.Telegram?.WebApp?.ready(); window.Telegram?.WebApp?.expand();
+if (window.Telegram?.WebApp?.BackButton) { window.Telegram.WebApp.BackButton.onClick(() => { if (selDay !== null) selDay = null; else if (selCat !== null) selCat = null; else if (selMonth !== null) selMonth = null; window.Telegram.WebApp.HapticFeedback?.selectionChanged(); render(); }); }
+if (D) render();
+}
 }
 function setTab(t) { tab = t; selDay = null; selMonth = null; window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); render(); } function setFlow(f) { if (flow !== f) { flow = f; selCat = null; selDay = null; selMonth = null; window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); render(); } } function toggleCat(i) { selCat = (selCat === i) ? null : i; selMonth = null; window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); render(); }
 function selectDay(d) { selDay = (selDay === d) ? null : d; render(); } function selectMonth(m) { selMonth = (selMonth === m) ? null : m; if (selMonth !== null) selCat = null; render(); } function toggleAllMonths() { showAllMonths = !showAllMonths; render(); }
 function renderRings() {
 const outCirc = 276.46, inCirc = 223.05; const totExpAll = D.year_pts.reduce((s, p) => s + p[1], 0), totIncAll = D.year_pts.reduce((s, p) => s + p[0], 0); const isSelM = tab === 'y' && selMonth !== null; const yInc = isSelM ? D.year_pts[selMonth][0] : totIncAll, yExp = isSelM ? D.year_pts[selMonth][1] : totExpAll; const isDeficit = tab === 'y' && selCat === null && yInc <= 0 && yExp > 0; const yearRatio = yInc > 0 ? (yExp / yInc) * 100 : (yExp > 0 ? 100 : 0), savePct = yInc > 0 ? Math.max(0, Math.round(((yInc - yExp) / yInc) * 100)) : 0;
-let outPct = 0, inPct = D.kpi.sds_pct, centerVal = '', centerLbl = '', outCol = '#e2e8f0';
+const catCol = getCatCol(selCat, flow);
+let outPct = 0, inPct = D.kpi.sds_pct, centerVal = '', centerLbl = '', outCol = selCat !== null ? catCol : (tab === 'm' ? (flow === 'exp' ? '#ff453a' : '#10b981') : (isDeficit ? '#ff453a' : '#38bdf8'));
 if (selCat === null) {
 if (tab === 'd') { outPct = D.kpi.budget_pct; centerVal = `${Math.round(D.kpi.sds_pct)}%`; centerLbl = 'План дня'; }
 else if (tab === 'm') { outPct = D.kpi.budget_pct; centerVal = `${fmtF(D.kpi.budget_pct)}%`; centerLbl = 'Бюджет'; }
@@ -59,20 +65,19 @@ const catIncPct = pInc > 0 ? (catAmt / pInc) * 100 : 0; outPct = catIncPct; inPc
 const outDash = (Math.min(outPct, 100) / 100) * outCirc, inDash = (Math.min(inPct, 100) / 100) * inCirc;
 const inCol = (tab === 'y' && selCat === null) ? '#10b981' : (inPct >= 100 ? '#ff453a' : (inPct >= 75 ? '#f59e0b' : '#10b981'));
 const legHtml = (tab === 'y') ? (isDeficit ? `<span style="display:inline-flex;align-items:center"><span class="dot" style="background:#ff453a"></span>Расход: ${fmt(yExp)} ₽</span><span style="display:inline-flex;align-items:center"><span class="dot" style="background:#10b981"></span>Сбережения: 0%</span>` : `<span style="display:inline-flex;align-items:center"><span class="dot" style="background:${outCol}"></span>${selCat!==null?'Кат':'Расход'}: ${fmtF(outPct)}%</span><span style="display:inline-flex;align-items:center"><span class="dot" style="background:#10b981"></span>Сбережения: ${savePct}%</span>`) : `<span style="display:inline-flex;align-items:center"><span class="dot" style="background:${outCol}"></span>Мес: ${fmtF(outPct)}%</span><span style="display:inline-flex;align-items:center"><span class="dot" style="background:${inCol}"></span>День: ${Math.round(inPct)}%</span>`;
-return `<div style="position:relative;width:116px;height:116px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 100 100" style="width:116px;height:116px;transform:rotate(-90deg)"><circle cx="50" cy="50" r="44" fill="none" stroke="#262a32" stroke-width="5.5"/><circle cx="50" cy="50" r="44" fill="none" stroke="${outCol}" stroke-width="5.5" stroke-dasharray="${outDash} ${outCirc}" stroke-linecap="round" style="transition:stroke-dasharray .35s ease,stroke .3s ease;filter:drop-shadow(0 0 4px rgba(226,232,240,0.35))"/><circle cx="50" cy="50" r="35.5" fill="none" stroke="#262a32" stroke-width="5"/><circle cx="50" cy="50" r="35.5" fill="none" stroke="${inCol}" stroke-width="5" stroke-dasharray="${inDash} ${inCirc}" stroke-linecap="round" style="transition:stroke-dasharray .35s ease,stroke .3s ease;filter:drop-shadow(0 0 6px ${inCol}88)"/></svg><div style="position:absolute;text-align:center;pointer-events:none;"><div style="font-weight:700;font-size:15px;line-height:1.05;color:#f8fafc;letter-spacing:-0.3px">${centerVal}</div><div style="font-size:7.5px;text-transform:uppercase;letter-spacing:0.4px;margin-top:2px;color:#94a3b8;white-space:nowrap">${centerLbl}</div></div></div><div style="display:flex;gap:10px;margin-top:6px;font-size:10px" class="muted">${legHtml}</div>`;
+return `<div style="position:relative;width:116px;height:116px;display:flex;align-items:center;justify-content:center"><svg viewBox="0 0 100 100" style="width:116px;height:116px;transform:rotate(-90deg)"><circle cx="50" cy="50" r="44" fill="none" stroke="#262a32" stroke-width="5.5"/><circle cx="50" cy="50" r="44" fill="none" stroke="${outCol}" stroke-width="5.5" stroke-dasharray="${outDash} ${outCirc}" stroke-linecap="round" style="transition:stroke-dasharray .35s ease,stroke .3s ease;filter:drop-shadow(0 0 4px ${outCol}66)"/><circle cx="50" cy="50" r="35.5" fill="none" stroke="#262a32" stroke-width="5"/><circle cx="50" cy="50" r="35.5" fill="none" stroke="${inCol}" stroke-width="5" stroke-dasharray="${inDash} ${inCirc}" stroke-linecap="round" style="transition:stroke-dasharray .35s ease,stroke .3s ease;filter:drop-shadow(0 0 6px ${inCol}88)"/></svg><div style="position:absolute;text-align:center;pointer-events:none;"><div style="font-weight:700;font-size:15px;line-height:1.05;color:#f8fafc;letter-spacing:-0.3px">${centerVal}</div><div style="font-size:7.5px;text-transform:uppercase;letter-spacing:0.4px;margin-top:2px;color:#94a3b8;white-space:nowrap">${centerLbl}</div></div></div><div style="display:flex;gap:10px;margin-top:6px;font-size:10px" class="muted">${legHtml}</div>`;
 }
 function swissGrid() { return `<line x1="10" y1="25" x2="350" y2="25" stroke="rgba(255,255,255,0.07)" stroke-dasharray="3,3" stroke-width="1"/><line x1="10" y1="45" x2="350" y2="45" stroke="rgba(255,255,255,0.07)" stroke-dasharray="3,3" stroke-width="1"/><line x1="10" y1="65" x2="350" y2="65" stroke="rgba(255,255,255,0.07)" stroke-dasharray="3,3" stroke-width="1"/><line x1="40" y1="15" x2="40" y2="85" stroke="rgba(255,255,255,0.07)" stroke-dasharray="3,3" stroke-width="1"/><line x1="110" y1="15" x2="110" y2="85" stroke="rgba(255,255,255,0.07)" stroke-dasharray="3,3" stroke-width="1"/><line x1="180" y1="15" x2="180" y2="85" stroke="rgba(255,255,255,0.07)" stroke-dasharray="3,3" stroke-width="1"/><line x1="250" y1="15" x2="250" y2="85" stroke="rgba(255,255,255,0.07)" stroke-dasharray="3,3" stroke-width="1"/><line x1="320" y1="15" x2="320" y2="85" stroke="rgba(255,255,255,0.07)" stroke-dasharray="3,3" stroke-width="1"/>`; }
 function renderChart() {
 if (tab === 'd') {
 if (selCat === null) {
-const incH = Array(24).fill(0), expH = Array(24).fill(0); (D.day_inc || []).forEach(t => { const h = parseInt(t[0].split(':')[0]) || 0; incH[h] += t[2]; });
-(D.day_tx || []).forEach(t => { const h = parseInt(t[0].split(':')[0]) || 0; expH[h] += t[2]; });
+const incH = Array(24).fill(0), expH = Array(24).fill(0); (D.day_inc || []).forEach(t => { incH[parseInt(t[0].split(':')[0]) || 0] += t[2]; }); (D.day_tx || []).forEach(t => { expH[parseInt(t[0].split(':')[0]) || 0] += t[2]; });
 const maxI = Math.max(...incH, 100), maxE = Math.max(...expH, 100); const bars = Array.from({length: 24}, (_, h) => {
 const x = 12 + h * 14, iAmt = incH[h], eAmt = expH[h], lbl = h % 4 === 0 ? `<text x="${x+4}" y="97" text-anchor="middle">${h}:00</text>` : '';
 if (iAmt === 0 && eAmt === 0) return `<rect x="${x+1}" y="83" width="6" height="2" rx="1" fill="#2e333d"/>` + lbl;
-if (iAmt === 0 && eAmt > 0) { const eh = Math.max((eAmt / maxE) * 64, 2); return `<rect x="${x+1.5}" y="${85-eh}" width="5" height="${eh}" rx="1" fill="#ff453a"/>` + lbl; }
-if (iAmt > 0 && eAmt === 0) { const ih = Math.max((iAmt / maxI) * 74, 2); return `<rect x="${x+1.5}" y="${85-ih}" width="5" height="${ih}" rx="1" fill="#10b981"/>` + lbl; }
 const ih = Math.max((iAmt / maxI) * 74, 2), eh = Math.max((eAmt / maxE) * 64, 2);
+if (iAmt === 0 && eAmt > 0) return `<rect x="${x+1.5}" y="${85-eh}" width="5" height="${eh}" rx="1" fill="#ff453a"/>` + lbl;
+if (iAmt > 0 && eAmt === 0) return `<rect x="${x+1.5}" y="${85-ih}" width="5" height="${ih}" rx="1" fill="#10b981"/>` + lbl;
 return `<rect x="${x}" y="${85-ih}" width="3.2" height="${ih}" rx="1" fill="#10b981"/><rect x="${x+4.8}" y="${85-eh}" width="3.2" height="${eh}" rx="1" fill="#ff453a"/>` + lbl;
 }).join('');
 const allTx = [
@@ -86,7 +91,8 @@ return `<div class="tx-row"><span>${t.time} <b><span class="ico-box" style="widt
 return `<svg viewBox="0 0 360 105" style="width:100%;height:100px">${swissGrid()}${bars}</svg><div class="title" style="margin-top:6px">Операции за сегодня:</div><div class="tx-list">${txHtml}</div>`;
 } else {
 const list = flow === 'inc' ? (D.day_inc || []) : (D.day_tx || []), hourly = Array(24).fill(0); list.forEach(t => { if (t[1] === selCat) { const h = parseInt(t[0].split(':')[0]) || 0; hourly[h] += t[2]; } });
-const max = Math.max(...hourly, 100); const bars = hourly.map((amt, h) => `<rect x="${15+h*14}" y="${85-(amt/max)*75}" width="8" height="${Math.max((amt/max)*75, 2)}" rx="2" fill="${amt>0?(flow==='inc'?'#10b981':'#cbd5e1'):'#2e333d'}"/>` + (h%4===0?`<text x="${19+h*14}" y="97" text-anchor="middle">${h}:00</text>`:'')).join('');
+const catCol = getCatCol(selCat, flow);
+const max = Math.max(...hourly, 100); const bars = hourly.map((amt, h) => `<rect x="${15+h*14}" y="${85-(amt/max)*75}" width="8" height="${Math.max((amt/max)*75, 2)}" rx="2" fill="${amt>0?catCol:'#2e333d'}"/>` + (h%4===0?`<text x="${19+h*14}" y="97" text-anchor="middle">${h}:00</text>`:'')).join('');
 const txHtml = list.filter(t => t[1] === selCat).map(t => {
 const icon = flow === 'inc' ? ((D.inc_cats || [])[t[1]]?.[1] || '💵') : (D.cats[t[1]]?.[1] || '🛒');
 const sign = flow === 'inc' ? '+' : '-', col = flow === 'inc' ? '#34d399' : '#f1f5f9';
@@ -98,46 +104,39 @@ return `<svg viewBox="0 0 360 105" style="width:100%;height:100px">${swissGrid()
 if (tab === 'm') {
 const days = D.meta.days_in_m;
 if (selCat === null) {
-const incPts = {}, expPts = {};
-(D.month_inc_pts || []).forEach(p => { incPts[p[0]] = (incPts[p[0]] || 0) + p[2]; });
-(D.month_pts || []).forEach(p => { expPts[p[0]] = (expPts[p[0]] || 0) + p[2]; });
+const incPts = {}, expPts = {}; (D.month_inc_pts || []).forEach(p => { incPts[p[0]] = (incPts[p[0]] || 0) + p[2]; }); (D.month_pts || []).forEach(p => { expPts[p[0]] = (expPts[p[0]] || 0) + p[2]; });
 const maxVal = Math.max(...Object.values(incPts), ...Object.values(expPts), D.kpi.daily_plan * 1.5, 1000), step = Math.floor(335 / days);
 const bars = Array.from({length: days}, (_, i) => i + 1).map(d => {
-const x = 10 + (d - 1) * step, iAmt = incPts[d] || 0, eAmt = expPts[d] || 0, isSel = selDay === d, lbl = (d % 5 === 0 || d === 1 || d === days) ? `<text x="${x+4}" y="97" text-anchor="middle">${d}</text>` : '';
-const eCol = eAmt > D.kpi.daily_plan ? '#ff453a' : '#cbd5e1';
+const x = 10 + (d - 1) * step, iAmt = incPts[d] || 0, eAmt = expPts[d] || 0, isSel = selDay === d, lbl = (d % 5 === 0 || d === 1 || d === days) ? `<text x="${x+4}" y="97" text-anchor="middle">${d}</text>` : '', eCol = eAmt > D.kpi.daily_plan ? '#ff453a' : '#ff6961';
 if (iAmt === 0 && eAmt === 0) return `<rect x="${x+1}" y="83" width="6" height="2" rx="1" fill="#2e333d" style="cursor:pointer" onclick="selectDay(${d})"/>` + lbl;
 const ih = iAmt > 0 ? Math.max((iAmt / maxVal) * 74, 2) : 2, eh = eAmt > 0 ? Math.max((eAmt / maxVal) * 74, 2) : 2;
 if (iAmt === 0 && eAmt > 0) return `<rect x="${x+1.5}" y="${85-eh}" width="5" height="${eh}" rx="1" fill="${eCol}" stroke="${isSel?'#fff':'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + lbl;
 if (iAmt > 0 && eAmt === 0) return `<rect x="${x+1.5}" y="${85-ih}" width="5" height="${ih}" rx="1" fill="#10b981" stroke="${isSel?'#fff':'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + lbl;
 return `<rect x="${x}" y="${85 - ih}" width="3.2" height="${ih}" rx="1" fill="#10b981" style="cursor:pointer" onclick="selectDay(${d})"/><rect x="${x+4.8}" y="${85 - eh}" width="3.2" height="${eh}" rx="1" fill="${eCol}" stroke="${isSel ? '#fff' : 'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + lbl;
 }).join('');
-const planY = Math.min(76, Math.max(12, 85 - (D.kpi.daily_plan / maxVal) * 74));
-const planLine = `<line x1="10" y1="${planY}" x2="350" y2="${planY}" stroke="#f59e0b" stroke-dasharray="3,3" stroke-width="1"/><text x="348" y="${planY - 3}" text-anchor="end" fill="#f59e0b">план: ${fmt(D.kpi.daily_plan)} ₽</text>`;
+const planY = Math.min(76, Math.max(12, 85 - (D.kpi.daily_plan / maxVal) * 74)), planLine = `<line x1="10" y1="${planY}" x2="350" y2="${planY}" stroke="#f59e0b" stroke-dasharray="3,3" stroke-width="1"/><text x="348" y="${planY - 3}" text-anchor="end" fill="#f59e0b">план: ${fmt(D.kpi.daily_plan)} ₽</text>`;
 const dayBadge = selDay ? `<span style="border:1px solid rgba(255,255,255,0.2);background:rgba(15,17,21,0.85);padding:1px 7px;border-radius:6px;color:#f8fafc;font-size:11px">День <b>${selDay}</b>: +${fmt(incPts[selDay]||0)} ₽ / -${fmt(expPts[selDay]||0)} ₽</span>` : '<span class="muted">Нажмите на столбец для деталей</span>';
 return `<svg viewBox="0 0 360 105" style="width:100%;height:100px">${swissGrid()}${bars}${planLine}</svg><div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">${dayBadge}<span class="muted">Дней: ${D.meta.days_in_m}</span></div>`;
 } else {
-const pts = {}, rawPts = flow === 'inc' ? (D.month_inc_pts || []) : (D.month_pts || []);
-rawPts.forEach(p => { if (p[1] === selCat) pts[p[0]] = (pts[p[0]] || 0) + p[2]; });
-const hasCatPlan = flow === 'exp' && D.cats[selCat]?.[3] > 0, curPlan = hasCatPlan ? (D.cats[selCat][3] / days) : D.kpi.daily_plan;
-const planLbl = hasCatPlan ? `норма: ${fmt(curPlan)} ₽/д` : `план: ${fmt(D.kpi.daily_plan)} ₽`;
-const maxVal = flow === 'inc' ? Math.max(...Object.values(pts), 1000) : Math.max(...Object.values(pts), curPlan * 2.2, 500);
-const planY = Math.min(72, Math.max(15, 85 - (curPlan / maxVal) * 75)), barW = Math.max(4, Math.floor(320 / days) - 2);
+const pts = {}, rawPts = flow === 'inc' ? (D.month_inc_pts || []) : (D.month_pts || []); rawPts.forEach(p => { if (p[1] === selCat) pts[p[0]] = (pts[p[0]] || 0) + p[2]; });
+const catCol = getCatCol(selCat, flow), hasCatPlan = flow === 'exp' && D.cats[selCat]?.[3] > 0, curPlan = hasCatPlan ? (D.cats[selCat][3] / days) : 0, planLbl = hasCatPlan ? `норма: ${fmt(curPlan)} ₽/д` : '';
+const maxVal = Math.max(...Object.values(pts), curPlan * 1.5, 500), planY = Math.min(72, Math.max(15, 85 - (curPlan / maxVal) * 75)), barW = Math.max(4, Math.floor(320 / days) - 2);
 const bars = Array.from({length: days}, (_, i) => i + 1).map(d => {
-const amt = pts[d] || 0, bh = (amt / maxVal) * 75, x = 12 + (d - 1) * Math.floor(330 / days), y = 85 - bh;
-const col = flow === 'inc' ? (amt > 0 ? '#10b981' : '#2e333d') : (amt > curPlan ? '#ff453a' : (amt > 0 ? '#cbd5e1' : '#2e333d')), isSel = selDay === d;
+const amt = pts[d] || 0, bh = (amt / maxVal) * 75, x = 12 + (d - 1) * Math.floor(330 / days), y = 85 - bh, isOver = flow === 'exp' && hasCatPlan && amt > curPlan, col = amt > 0 ? (isOver ? '#ff453a' : catCol) : '#2e333d', isSel = selDay === d;
 return `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(bh, 2)}" rx="1.5" fill="${col}" stroke="${isSel ? '#fff' : 'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + ((d % 5 === 0 || d === 1 || d === days) ? `<text x="${x+barW/2}" y="97" text-anchor="middle">${d}</text>` : '');
 }).join('');
 const selAmt = selDay ? (pts[selDay] || 0) : 0, dayBadge = selDay ? `<span style="border:1px solid rgba(255,255,255,0.2);background:rgba(15,17,21,0.85);padding:1px 7px;border-radius:6px;color:#f8fafc;font-size:11px">День <b>${selDay}</b>: ${flow==='inc'?'Доход +':'Расход '}<b>${fmt(selAmt)} ₽</b></span>` : '<span class="muted">Нажмите на столбец для деталей</span>';
-const planLine = flow === 'exp' ? `<line x1="10" y1="${planY}" x2="350" y2="${planY}" stroke="#f59e0b" stroke-dasharray="3,3" stroke-width="1"/><text x="348" y="${planY - 3}" text-anchor="end" fill="#f59e0b">${planLbl}</text>` : '';
+const planLine = (flow === 'exp' && hasCatPlan) ? `<line x1="10" y1="${planY}" x2="350" y2="${planY}" stroke="#f59e0b" stroke-dasharray="3,3" stroke-width="1"/><text x="348" y="${planY - 3}" text-anchor="end" fill="#f59e0b">${planLbl}</text>` : '';
 return `<svg viewBox="0 0 360 105" style="width:100%;height:100px">${swissGrid()}${bars}${planLine}</svg><div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px">${dayBadge}<span class="muted">Дней: ${D.meta.days_in_m}</span></div>`;
 }
 }
 if (tab === 'y') {
 const mNames = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
 if (selCat !== null) {
+const catCol = getCatCol(selCat, flow);
 const catMonthVals = D.year_pts.map(p => flow === 'inc' ? (p[3]?.find(c => c[0] === selCat)?.[1] || 0) : (p[2]?.find(c => c[0] === selCat)?.[1] || 0)), max = Math.max(...catMonthVals, 1000);
 const bars = D.year_pts.map((p, i) => {
-const val = catMonthVals[i], vh = (val / max) * 70, x = 14 + i * 28, isSel = selMonth === i, col = val > 0 ? (flow === 'inc' ? '#10b981' : '#ff453a') : '#2e333d';
+const val = catMonthVals[i], vh = (val / max) * 70, x = 14 + i * 28, isSel = selMonth === i, col = val > 0 ? catCol : '#2e333d';
 return `<g style="cursor:pointer" onclick="selectMonth(${i})"><rect x="${x}" y="${80 - vh}" width="12" height="${Math.max(vh, 1.5)}" rx="2.5" fill="${col}" stroke="${isSel ? '#fff' : 'none'}" stroke-width="1.5"/><text x="${x+6}" y="94" text-anchor="middle">${mNames[i]}</text></g>`;
 }).join('');
 const selStr = selMonth !== null ? `<div style="text-align:center;padding:2px 0"><span style="border:1px solid rgba(255,255,255,0.2);background:rgba(15,17,21,0.85);padding:1px 7px;border-radius:6px;font-size:11px"><b>${mNames[selMonth]}</b>: ${flow==='inc'?'Доход +':'Расход '}<b>${fmt(catMonthVals[selMonth])} ₽</b></span></div>` : '';
@@ -179,12 +178,12 @@ itemsHtml = cList.map(({ c, i, spent, lim }) => {
 let rightTxt = '', fillStyle = '';
 if (tab === 'y') {
 const shareY = pExp > 0 ? Math.round((spent / pExp) * 100) : 0, cp = Math.max(shareY, 4), unpTag = c[3] <= 0 ? '<span style="color:#ff6961;font-size:10px;margin-left:4px">вне плана</span>' : '';
-rightTxt = `${fmt(spent)} ₽ <span class="muted">(${shareY}%)</span>${unpTag}`; fillStyle = `width:${cp}%;background:linear-gradient(90deg, #ff453a, #e2e8f0)`;
+rightTxt = `${fmt(spent)} ₽ <span class="muted">(${shareY}%)</span>${unpTag}`; fillStyle = `width:${cp}%;background:linear-gradient(90deg, ${c[4]||'#ff453a'}, ${c[4]||'#ff453a'}aa)`;
 } else if (lim <= 0 && spent > 0) {
-rightTxt = `${fmt(spent)} / 0 ₽ <span style="color:#ff6961;font-size:10px;margin-left:4px">вне плана</span>`; fillStyle = 'width:100%;background:#ff453a';
+rightTxt = `${fmt(spent)} / 0 ₽ <span style="color:#ff6961;font-size:10px;margin-left:4px">вне плана</span>`; fillStyle = `width:100%;background:linear-gradient(90deg, ${c[4]||'#ff6961'}, ${c[4]||'#ff6961'}88)`;
 } else {
-const rawCp = lim > 0 ? Math.min(Math.round((spent / lim) * 100), 100) : 0, cp = spent > 0 ? Math.max(rawCp, 4) : 0;
-rightTxt = `${fmt(spent)} / ${fmt(lim)} ₽`; fillStyle = cp > 0 ? `width:${cp}%;background:linear-gradient(90deg, #ff453a, #e2e8f0)` : 'width:0%';
+const rawCp = lim > 0 ? Math.min(Math.round((spent / lim) * 100), 100) : 0, cp = spent > 0 ? Math.max(rawCp, 4) : 0, isOver = lim > 0 && spent > lim;
+rightTxt = `${fmt(spent)} / ${fmt(lim)} ₽`; fillStyle = isOver ? 'width:100%;background:linear-gradient(90deg, #ff453a, #ff6961);box-shadow:0 0 8px rgba(255,69,58,0.3)' : (cp > 0 ? `width:${cp}%;background:linear-gradient(90deg, ${c[4]||'#3b82f6'}, ${c[4]||'#3b82f6'}aa)` : 'width:0%');
 }
 return `<div class="cat-item ${selCat===i?'active':''}" onclick="toggleCat(${i})"><div style="display:flex;justify-content:space-between;align-items:center"><span style="display:inline-flex;align-items:center"><span class="ico-box">${ico(c[1])}</span><b>${c[0]}</b></span><span style="font-weight:600">${rightTxt}</span></div><div class="bar-track"><div class="bar-fill" style="${fillStyle}"></div></div></div>`;
 }).join('') || `<div class="muted" style="padding:4px 0">${tab==='d'?'Сегодня расходов еще не было':'Нет расходов за выбранный период'}</div>`;
@@ -198,7 +197,7 @@ return `<div class="cat-item ${selCat===i?'active':''}" onclick="toggleCat(${i})
 const yTitle = isSelM ? fullNames[selMonth] : `${D.meta.year} год`; const catTitle = flow === 'exp' ? (tab === 'd' ? 'Категории расходов (Сегодня)' : (tab === 'm' ? `Категории расходов (${D.meta.m_name})` : `Категории расходов (${yTitle})`)) : (tab === 'd' ? 'Категории доходов (Сегодня)' : (tab === 'm' ? `Категории доходов (${D.meta.m_name})` : `Категории доходов (${yTitle})`)); const catTotal = flow === 'exp' ? `${fmt(pExp)} ₽` : `${pInc > 0 ? "+" : ""}${fmt(pInc)} ₽`;
 const activeAccs = (D.accs || []).filter(a => Math.round(a[2]) !== 0); const totAcc = activeAccs.reduce((s, a) => s + Math.max(0, a[2]), 0) || 1;
 const accsHtml = activeAccs.length > 0 ? `<div class="bento"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span class="title">Состояние счетов</span><span class="muted">${fmt(D.kpi.free_cash)} ₽</span></div>${activeAccs.map(a => {
-const ap = Math.min(100, Math.max(0, Math.round((a[2] / totAcc) * 100))); return `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="display:inline-flex;align-items:center"><span class="ico-box">${ico(a[1])}</span><b>${a[0]}</b></span><span><b>${fmt(a[2])} ₽</b> <span class="muted">(${ap}%)</span></span></div><div class="bar-track" style="margin-top:3px"><div class="bar-fill" style="width:${ap}%;background:linear-gradient(90deg,#10b981,#cbd5e1)"></div></div></div>`; }).join('')}</div>` : '';
+const ap = Math.min(100, Math.max(0, Math.round((a[2] / totAcc) * 100))); return `<div style="margin-bottom:6px"><div style="display:flex;justify-content:space-between;align-items:center"><span style="display:inline-flex;align-items:center"><span class="ico-box">${ico(a[1])}</span><b>${a[0]}</b></span><span><b>${fmt(a[2])} ₽</b> <span class="muted">(${ap}%)</span></span></div><div class="bar-track" style="margin-top:3px"><div class="bar-fill" style="width:${ap}%;background:linear-gradient(90deg,#10b981,#34d399)"></div></div></div>`; }).join('')}</div>` : '';
 const actM = Math.max(1, D.year_pts.filter(p => p[1] > 0).length), avgM = Math.round(totExpAll / actM), yNet = totIncAll - totExpAll, savePct = totIncAll > 0 ? Math.round((yNet / totIncAll) * 100) : 0;
 const poolHtml = tab === 'y' ? (isSelM ? `<div><div class="title">Свободный пул</div><div style="font-size:21px;font-weight:700;color:#f8fafc;letter-spacing:-0.3px">${fmt(D.kpi.free_cash)} ₽</div></div><div class="badge ${pNet>=0?'b-green':'b-red'}">${pNet>=0?`Итог (${fullNames[selMonth]}): +`:`Дефицит: -`}${fmt(Math.abs(pNet))} ₽</div><div class="muted">Доля в расходах года: ${totExpAll>0?Math.round((pExp/totExpAll)*100):0}%</div>` : `<div><div class="title">Свободный пул</div><div style="font-size:21px;font-weight:700;color:#f8fafc;letter-spacing:-0.3px">${fmt(D.kpi.free_cash)} ₽</div></div><div class="badge ${yNet>=0?'b-green':'b-red'}">${yNet>=0?'Итог года: +':'Убыток: -'}${fmt(Math.abs(yNet))} ₽ (${savePct}%)</div><div class="muted">Сред. расход: ~${fmt(avgM)} ₽/мес <span style="opacity:0.7">(${actM} мес.)</span></div>`) : `<div><div class="title">Свободный пул</div><div style="font-size:21px;font-weight:700;color:#f8fafc;letter-spacing:-0.3px">${fmt(D.kpi.free_cash)} ₽</div></div><div class="${badgeCls}">${badgeTxt}</div><div class="muted">Лимит далее: ~${fmt(D.kpi.next_sds)} ₽/д <span style="opacity:0.7;white-space:nowrap">(${D.kpi.days_left} дн.)</span></div>`;
 let monthsBentoHtml = '';
@@ -218,6 +217,7 @@ document.getElementById('app').innerHTML = `
 <div class="bento"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span class="title">${tab==='d'?'Активность за день':(tab==='m'?'Динамика по дням':'Доходы и расходы по месяцам')}</span>${catFilterHtml}</div><div class="chart-box">${renderChart()}</div><div style="display:flex;justify-content:space-around;margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08);text-align:center">${summaryCols}</div></div>
 <div class="flow-switch"><div class="flow-btn ${flow==='exp'?'active-exp':''}" onclick="setFlow('exp')"><span style="color:#ff6961;margin-right:4px">↓</span>Расходы: ${fmt(pExp)} ₽</div><div class="flow-btn ${flow==='inc'?'active-inc':''}" onclick="setFlow('inc')"><span style="color:#34d399;margin-right:4px">↑</span>Доходы: ${pInc > 0 ? "+" : ""}${fmt(pInc)} ₽</div></div>
 <div class="bento"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span class="title">${catTitle}</span><span class="muted" style="color:${flow==='inc'?'#34d399':'#94a3b8'};font-weight:600">${catTotal}</span></div>${itemsHtml}</div>${monthsBentoHtml}`;
+if (window.Telegram?.WebApp?.BackButton) { if (selCat !== null || selDay !== null || selMonth !== null) window.Telegram.WebApp.BackButton.show(); else window.Telegram.WebApp.BackButton.hide(); }
 }
 window.addEventListener('hashchange', loadData); loadData();
 </script></body></html>
