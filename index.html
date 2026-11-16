@@ -13,14 +13,15 @@ body { background: radial-gradient(circle at 85% 22%, rgba(45,212,191,0.12), tra
 .ico-box { width: 28px; height: 28px; border-radius: 8px; background: linear-gradient(145deg, rgba(255,255,255,0.12), rgba(255,255,255,0.04)); border: 1px solid rgba(255,255,255,0.18); box-shadow: inset 0 1px 0 rgba(255,255,255,0.25); display: inline-flex; align-items: center; justify-content: center; margin-right: 8px; font-size: 14px; }
 .bar-track { height: 5px; background: #14171c; border-radius: 3px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.6); overflow: hidden; margin-top: 5px; width: 100%; } .bar-fill { height: 100%; border-radius: 3px; }
 .chart-box { width: 100%; height: auto; position: relative; } svg text { fill: #94a3b8; font-size: 8px; } .filter-chip { background: rgba(255,255,255,0.14); border: 1px solid rgba(255,255,255,0.28); color: #fff; padding: 3px 9px; border-radius: 7px; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
-.tx-list { max-height: 110px; overflow-y: auto; margin-top: 8px; } .tx-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 11px; } .muted { color: #94a3b8; font-size: 11px; } .title { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; } .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; } </style>
+.tx-list { max-height: 110px; overflow-y: auto; margin-top: 8px; padding-right: 6px; } .tx-row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 11px; } .muted { color: #94a3b8; font-size: 11px; } .title { font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; } .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 5px; vertical-align: middle; } </style>
 </head>
 <body>
 <div id="app"><div style="text-align:center;padding:40px 0;color:#94a3b8;">Загрузка данных...</div></div>
 <script>let D = null, tab = 'm'; let flow = 'exp'; let selCat = null, selDay = null, selMonth = null, showAllMonths = false; const fullNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 const fmt = n => Math.round(n).toLocaleString('ru-RU'), fmtF = n => n.toLocaleString('ru-RU', {minimumFractionDigits: 1, maximumFractionDigits: 1});
 const ico = e => e === '🛒' ? `<span style="filter:grayscale(1) invert(1) brightness(1.85) drop-shadow(0 0 2px rgba(255,255,255,0.35))">${e}</span>` : e;
-const getCatCol = (i, f) => { if (i === null || i === undefined) return f === 'inc' ? '#10b981' : '#ff453a'; if (f === 'inc') return (D?.inc_cats || [])[i]?.[3] || '#10b981'; return D?.cats?.[i]?.[4] || '#3b82f6'; };
+const expP = ['#3b82f6','#f59e0b','#f97316','#8b5cf6','#ec4899','#0ea5e9','#a855f7','#e11d48'];
+const getCatCol = (i, f) => { if (i === null || i === undefined) return f === 'inc' ? '#10b981' : '#ff453a'; if (f === 'inc') return (D?.inc_cats || [])[i]?.[3] || '#10b981'; let c = D?.cats?.[i]?.[4]; if (!c || c === '#10b981' || c === '#14b8a6' || c === '#22c55e' || c === '#34d399') c = expP[i % expP.length] || '#f59e0b'; return c; };
 async function loadData() {
 try {
 const hp = new URLSearchParams(location.hash.replace(/^#/, '')), sp = new URLSearchParams(location.search);
@@ -44,7 +45,7 @@ function selectDay(d) { selDay = (selDay === d) ? null : d; render(); } function
 function renderRings() {
 const outCirc = 276.46, inCirc = 223.05; const totExpAll = D.year_pts.reduce((s, p) => s + p[1], 0), totIncAll = D.year_pts.reduce((s, p) => s + p[0], 0); const isSelM = tab === 'y' && selMonth !== null; const yInc = isSelM ? D.year_pts[selMonth][0] : totIncAll, yExp = isSelM ? D.year_pts[selMonth][1] : totExpAll; const isDeficit = tab === 'y' && selCat === null && yInc <= 0 && yExp > 0; const yearRatio = yInc > 0 ? (yExp / yInc) * 100 : (yExp > 0 ? 100 : 0), savePct = yInc > 0 ? Math.max(0, Math.round(((yInc - yExp) / yInc) * 100)) : 0;
 const catCol = getCatCol(selCat, flow);
-let outPct = 0, inPct = D.kpi.sds_pct, centerVal = '', centerLbl = '', outCol = selCat !== null ? catCol : (tab === 'm' ? (flow === 'exp' ? '#ff453a' : '#10b981') : (isDeficit ? '#ff453a' : '#38bdf8'));
+let outPct = 0, inPct = D.kpi.sds_pct, centerVal = '', centerLbl = '', outCol = selCat !== null ? catCol : (tab === 'y' ? (isDeficit ? '#ff453a' : '#38bdf8') : (flow === 'exp' ? '#ff453a' : '#10b981'));
 if (selCat === null) {
 if (tab === 'd') { outPct = D.kpi.budget_pct; centerVal = `${Math.round(D.kpi.sds_pct)}%`; centerLbl = 'План дня'; }
 else if (tab === 'm') { outPct = D.kpi.budget_pct; centerVal = `${fmtF(D.kpi.budget_pct)}%`; centerLbl = 'Бюджет'; }
@@ -75,10 +76,10 @@ const incH = Array(24).fill(0), expH = Array(24).fill(0); (D.day_inc || []).forE
 const maxI = Math.max(...incH, 100), maxE = Math.max(...expH, 100); const bars = Array.from({length: 24}, (_, h) => {
 const x = 12 + h * 14, iAmt = incH[h], eAmt = expH[h], lbl = h % 4 === 0 ? `<text x="${x+4}" y="97" text-anchor="middle">${h}:00</text>` : '';
 if (iAmt === 0 && eAmt === 0) return `<rect x="${x+1}" y="83" width="6" height="2" rx="1" fill="#2e333d"/>` + lbl;
-const ih = Math.max((iAmt / maxI) * 74, 2), eh = Math.max((eAmt / maxE) * 64, 2);
-if (iAmt === 0 && eAmt > 0) return `<rect x="${x+1.5}" y="${85-eh}" width="5" height="${eh}" rx="1" fill="#ff453a"/>` + lbl;
-if (iAmt > 0 && eAmt === 0) return `<rect x="${x+1.5}" y="${85-ih}" width="5" height="${ih}" rx="1" fill="#10b981"/>` + lbl;
-return `<rect x="${x}" y="${85-ih}" width="3.2" height="${ih}" rx="1" fill="#10b981"/><rect x="${x+4.8}" y="${85-eh}" width="3.2" height="${eh}" rx="1" fill="#ff453a"/>` + lbl;
+const ih = Math.max((iAmt / maxI) * 74, 2), eh = Math.max((eAmt / maxE) * 64, 2), iCol = flow === 'exp' ? 'rgba(16,185,129,0.35)' : '#10b981', eCol = flow === 'inc' ? 'rgba(255,69,58,0.35)' : '#ff453a';
+if (iAmt === 0 && eAmt > 0) return `<rect x="${x+1.5}" y="${85-eh}" width="5" height="${eh}" rx="1" fill="${eCol}"/>` + lbl;
+if (iAmt > 0 && eAmt === 0) return `<rect x="${x+1.5}" y="${85-ih}" width="5" height="${ih}" rx="1" fill="${iCol}"/>` + lbl;
+return `<rect x="${x}" y="${85-ih}" width="3.2" height="${ih}" rx="1" fill="${iCol}"/><rect x="${x+4.8}" y="${85-eh}" width="3.2" height="${eh}" rx="1" fill="${eCol}"/>` + lbl;
 }).join('');
 const allTx = [
 ...(D.day_inc || []).map(t => ({ time: t[0], catIdx: t[1], amt: t[2], name: t[3], isInc: true })),
@@ -107,12 +108,12 @@ if (selCat === null) {
 const incPts = {}, expPts = {}; (D.month_inc_pts || []).forEach(p => { incPts[p[0]] = (incPts[p[0]] || 0) + p[2]; }); (D.month_pts || []).forEach(p => { expPts[p[0]] = (expPts[p[0]] || 0) + p[2]; });
 const maxVal = Math.max(...Object.values(incPts), ...Object.values(expPts), D.kpi.daily_plan * 1.5, 1000), step = Math.floor(335 / days);
 const bars = Array.from({length: days}, (_, i) => i + 1).map(d => {
-const x = 10 + (d - 1) * step, iAmt = incPts[d] || 0, eAmt = expPts[d] || 0, isSel = selDay === d, lbl = (d % 5 === 0 || d === 1 || d === days) ? `<text x="${x+4}" y="97" text-anchor="middle">${d}</text>` : '', eCol = eAmt > D.kpi.daily_plan ? '#ff453a' : '#ff6961';
+const x = 10 + (d - 1) * step, iAmt = incPts[d] || 0, eAmt = expPts[d] || 0, isSel = selDay === d, lbl = (d % 5 === 0 || d === 1 || d === days) ? `<text x="${x+4}" y="97" text-anchor="middle">${d}</text>` : '', iCol = flow === 'exp' ? 'rgba(16,185,129,0.35)' : '#10b981', eCol = flow === 'inc' ? 'rgba(255,69,58,0.35)' : (eAmt > D.kpi.daily_plan ? '#ff453a' : '#ff6961');
 if (iAmt === 0 && eAmt === 0) return `<rect x="${x+1}" y="83" width="6" height="2" rx="1" fill="#2e333d" style="cursor:pointer" onclick="selectDay(${d})"/>` + lbl;
 const ih = iAmt > 0 ? Math.max((iAmt / maxVal) * 74, 2) : 2, eh = eAmt > 0 ? Math.max((eAmt / maxVal) * 74, 2) : 2;
 if (iAmt === 0 && eAmt > 0) return `<rect x="${x+1.5}" y="${85-eh}" width="5" height="${eh}" rx="1" fill="${eCol}" stroke="${isSel?'#fff':'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + lbl;
-if (iAmt > 0 && eAmt === 0) return `<rect x="${x+1.5}" y="${85-ih}" width="5" height="${ih}" rx="1" fill="#10b981" stroke="${isSel?'#fff':'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + lbl;
-return `<rect x="${x}" y="${85 - ih}" width="3.2" height="${ih}" rx="1" fill="#10b981" style="cursor:pointer" onclick="selectDay(${d})"/><rect x="${x+4.8}" y="${85 - eh}" width="3.2" height="${eh}" rx="1" fill="${eCol}" stroke="${isSel ? '#fff' : 'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + lbl;
+if (iAmt > 0 && eAmt === 0) return `<rect x="${x+1.5}" y="${85-ih}" width="5" height="${ih}" rx="1" fill="${iCol}" stroke="${isSel?'#fff':'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + lbl;
+return `<rect x="${x}" y="${85 - ih}" width="3.2" height="${ih}" rx="1" fill="${iCol}" style="cursor:pointer" onclick="selectDay(${d})"/><rect x="${x+4.8}" y="${85 - eh}" width="3.2" height="${eh}" rx="1" fill="${eCol}" stroke="${isSel ? '#fff' : 'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + lbl;
 }).join('');
 const planY = Math.min(76, Math.max(12, 85 - (D.kpi.daily_plan / maxVal) * 74)), planLine = `<line x1="10" y1="${planY}" x2="350" y2="${planY}" stroke="#f59e0b" stroke-dasharray="3,3" stroke-width="1"/><text x="348" y="${planY - 3}" text-anchor="end" fill="#f59e0b">план: ${fmt(D.kpi.daily_plan)} ₽</text>`;
 const dayBadge = selDay ? `<span style="border:1px solid rgba(255,255,255,0.2);background:rgba(15,17,21,0.85);padding:1px 7px;border-radius:6px;color:#f8fafc;font-size:11px">День <b>${selDay}</b>: +${fmt(incPts[selDay]||0)} ₽ / -${fmt(expPts[selDay]||0)} ₽</span>` : '<span class="muted">Нажмите на столбец для деталей</span>';
@@ -175,15 +176,15 @@ let itemsHtml = '';
 if (flow === 'exp') {
 const cList = D.cats.map((c, i) => ({ c, i, spent: tab === 'd' ? D.day_tx.filter(t => t[1] === i).reduce((s, t) => s + t[2], 0) : (tab === 'm' ? c[2] : (isSelM ? (D.year_pts[selMonth][2]?.find(x => x[0] === i)?.[1] || 0) : D.year_pts.reduce((s, p) => s + (p[2]?.find(x => x[0] === i)?.[1] || 0), 0))), lim: tab === 'd' ? (c[3] > 0 ? Math.round(c[3] / D.meta.days_in_m) : 0) : c[3] })).filter(({ spent, lim }) => !((tab === 'd' || tab === 'y') && spent <= 0) && !(tab === 'm' && spent <= 0 && lim <= 0)).sort((a, b) => b.spent - a.spent);
 itemsHtml = cList.map(({ c, i, spent, lim }) => {
-let rightTxt = '', fillStyle = '';
+let rightTxt = '', fillStyle = ''; const catCol = getCatCol(i, 'exp');
 if (tab === 'y') {
 const shareY = pExp > 0 ? Math.round((spent / pExp) * 100) : 0, cp = Math.max(shareY, 4), unpTag = c[3] <= 0 ? '<span style="color:#ff6961;font-size:10px;margin-left:4px">вне плана</span>' : '';
-rightTxt = `${fmt(spent)} ₽ <span class="muted">(${shareY}%)</span>${unpTag}`; fillStyle = `width:${cp}%;background:linear-gradient(90deg, ${c[4]||'#ff453a'}, ${c[4]||'#ff453a'}aa)`;
+rightTxt = `${fmt(spent)} ₽ <span class="muted">(${shareY}%)</span>${unpTag}`; fillStyle = `width:${cp}%;background:linear-gradient(90deg, ${catCol}, ${catCol}aa)`;
 } else if (lim <= 0 && spent > 0) {
-rightTxt = `${fmt(spent)} / 0 ₽ <span style="color:#ff6961;font-size:10px;margin-left:4px">вне плана</span>`; fillStyle = `width:100%;background:linear-gradient(90deg, ${c[4]||'#ff6961'}, ${c[4]||'#ff6961'}88)`;
+rightTxt = `${fmt(spent)} / 0 ₽ <span style="color:#ff6961;font-size:10px;margin-left:4px">вне плана</span>`; fillStyle = `width:100%;background:linear-gradient(90deg, ${catCol}, ${catCol}88)`;
 } else {
 const rawCp = lim > 0 ? Math.min(Math.round((spent / lim) * 100), 100) : 0, cp = spent > 0 ? Math.max(rawCp, 4) : 0, isOver = lim > 0 && spent > lim;
-rightTxt = `${fmt(spent)} / ${fmt(lim)} ₽`; fillStyle = isOver ? 'width:100%;background:linear-gradient(90deg, #ff453a, #ff6961);box-shadow:0 0 8px rgba(255,69,58,0.3)' : (cp > 0 ? `width:${cp}%;background:linear-gradient(90deg, ${c[4]||'#3b82f6'}, ${c[4]||'#3b82f6'}aa)` : 'width:0%');
+rightTxt = `${fmt(spent)} / ${fmt(lim)} ₽`; fillStyle = isOver ? 'width:100%;background:linear-gradient(90deg, #ff453a, #ff6961);box-shadow:0 0 8px rgba(255,69,58,0.3)' : (cp > 0 ? `width:${cp}%;background:linear-gradient(90deg, ${catCol}, ${catCol}aa)` : 'width:0%');
 }
 return `<div class="cat-item ${selCat===i?'active':''}" onclick="toggleCat(${i})"><div style="display:flex;justify-content:space-between;align-items:center"><span style="display:inline-flex;align-items:center"><span class="ico-box">${ico(c[1])}</span><b>${c[0]}</b></span><span style="font-weight:600">${rightTxt}</span></div><div class="bar-track"><div class="bar-fill" style="${fillStyle}"></div></div></div>`;
 }).join('') || `<div class="muted" style="padding:4px 0">${tab==='d'?'Сегодня расходов еще не было':'Нет расходов за выбранный период'}</div>`;
