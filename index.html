@@ -22,17 +22,18 @@ const fmt = n => Math.round(n).toLocaleString('ru-RU'), fmtF = n => n.toLocaleSt
 const ico = e => e === '🛒' ? `<span style="filter:grayscale(1) invert(1) brightness(1.85) drop-shadow(0 0 2px rgba(255,255,255,0.35))">${e}</span>` : e;
 async function loadData() {
 try {
-let h = (window.__LIVE_HASH__ || (location.hash.startsWith('#d=') ? location.hash.slice(3) : '')).trim();
+const hp = new URLSearchParams(location.hash.replace(/^#/, '')), sp = new URLSearchParams(location.search);
+let h = (window.__LIVE_HASH__ || hp.get('d') || sp.get('d') || '').trim();
+if (!h && location.hash.length > 1 && !location.hash.includes('=')) h = location.hash.slice(1).trim();
 if (!h) {
 D = { meta: {m_name: 'Демо Ноябрь', year: 2026, month: 11, day: 15, days_in_m: 30}, kpi: {free_cash: 42000, daily_plan: 3256, spent_today: 10100, today_rem: -6844, sds_pct: 310.2, next_sds: 2800, days_left: 15, total_budget: 50000, total_spent: 10100, budget_pct: 20.2, inc_today: 0, inc_month: 52100}, cats: [['Продукты','🛒',10100,20000,'#3b82f6'],['Транспорт','🚕',0,10000,'#f59e0b']], inc_cats: [['Пополнение','💵',52100,'#10b981']], day_tx: [['13:43',0,100,'Продукты'],['13:45',0,10000,'Продукты']], day_inc: [], month_pts: [[15,0,10100]], month_inc_pts: [[1,0,52100]], year_pts: Array(12).fill([0,0,[],[]]) };
 } else {
-let b64 = h.replace(/-/g, '+').replace(/_/g, '/');
-while (b64.length % 4) b64 += '=';
-const bin = atob(b64), bytes = new Uint8Array(bin.length);
-for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-const ds = new DecompressionStream('deflate-raw'), w = ds.writable.getWriter(); w.write(bytes); w.close();
-D = JSON.parse(await new Response(ds.readable).text());
-} } catch (e) { console.error('Decode error:', e); return; } window.Telegram?.WebApp?.ready(); window.Telegram?.WebApp?.expand(); render(); }
+let b64 = h.replace(/-/g, '+').replace(/_/g, '/'); while (b64.length % 4) b64 += '=';
+const bin = atob(b64), bytes = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+const ds = new DecompressionStream('deflate-raw'), w = ds.writable.getWriter(); w.write(bytes); w.close(); D = JSON.parse(await new Response(ds.readable).text());
+}
+} catch (e) { console.error('Decode error:', e); document.getElementById('app').innerHTML = `<div class="bento" style="text-align:center;padding:24px 12px;margin:20px 0"><div style="font-size:24px;margin-bottom:8px">⚠️</div><div style="font-weight:700;color:#ff6961;margin-bottom:6px">Не удалось загрузить данные</div><div class="muted" style="font-size:11px;margin-bottom:12px">${e.message||e}</div><button onclick="location.reload()" style="background:#2e333d;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:6px 14px;border-radius:8px;font-size:12px;cursor:pointer">Повторить</button></div>`; } finally { window.Telegram?.WebApp?.ready(); window.Telegram?.WebApp?.expand(); if (D) render(); }
+}
 function setTab(t) { tab = t; selDay = null; selMonth = null; window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); render(); } function setFlow(f) { if (flow !== f) { flow = f; selCat = null; selDay = null; selMonth = null; window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); render(); } } function toggleCat(i) { selCat = (selCat === i) ? null : i; selMonth = null; window.Telegram?.WebApp?.HapticFeedback?.selectionChanged(); render(); }
 function selectDay(d) { selDay = (selDay === d) ? null : d; render(); } function selectMonth(m) { selMonth = (selMonth === m) ? null : m; render(); }
 function renderRings() {
@@ -214,7 +215,5 @@ document.getElementById('app').innerHTML = `
 <div class="flow-switch"><div class="flow-btn ${flow==='exp'?'active-exp':''}" onclick="setFlow('exp')"><span style="color:#ff6961;margin-right:4px">↓</span>Расходы: ${fmt(pExp)} ₽</div><div class="flow-btn ${flow==='inc'?'active-inc':''}" onclick="setFlow('inc')"><span style="color:#34d399;margin-right:4px">↑</span>Доходы: ${pInc > 0 ? "+" : ""}${fmt(pInc)} ₽</div></div>
 <div class="bento"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px"><span class="title">${catTitle}</span><span class="muted" style="color:${flow==='inc'?'#34d399':'#94a3b8'};font-weight:600">${catTotal}</span></div>${itemsHtml}</div>`;
 }
-loadData();
-</script>
-</body>
-</html>
+window.addEventListener('hashchange', loadData); loadData();
+</script></body></html>
