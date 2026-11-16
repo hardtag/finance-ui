@@ -121,10 +121,10 @@ return `<svg viewBox="0 0 360 105" style="width:100%;height:100px">${swissGrid()
 } else {
 const pts = {}, rawPts = flow === 'inc' ? (D.month_inc_pts || []) : (D.month_pts || []); rawPts.forEach(p => { if (p[1] === selCat) pts[p[0]] = (pts[p[0]] || 0) + p[2]; });
 const catCol = getCatCol(selCat, flow), hasCatPlan = flow === 'exp' && D.cats[selCat]?.[3] > 0, curPlan = hasCatPlan ? (D.cats[selCat][3] / days) : 0, planLbl = hasCatPlan ? `норма: ${fmt(curPlan)} ₽/д` : '';
-const maxVal = Math.max(...Object.values(pts), curPlan * 1.5, 500), planY = Math.min(72, Math.max(15, 85 - (curPlan / maxVal) * 75)), barW = Math.max(4, Math.floor(320 / days) - 2);
+const maxVal = Math.max(...Object.values(pts), curPlan * 1.5, 500), planY = Math.min(72, Math.max(15, 85 - (curPlan / maxVal) * 75)), step = Math.floor(335 / days), barW = Math.max(4, step - 3);
 const bars = Array.from({length: days}, (_, i) => i + 1).map(d => {
-const amt = pts[d] || 0, bh = (amt / maxVal) * 75, x = 12 + (d - 1) * Math.floor(330 / days), y = 85 - bh, isOver = flow === 'exp' && hasCatPlan && amt > curPlan, col = amt > 0 ? (isOver ? '#ff453a' : catCol) : '#2e333d', isSel = selDay === d;
-return `<rect x="${x}" y="${y}" width="${barW}" height="${Math.max(bh, 2)}" rx="1.5" fill="${col}" stroke="${isSel ? '#fff' : 'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + ((d % 5 === 0 || d === 1 || d === days) ? `<text x="${x+barW/2}" y="97" text-anchor="middle">${d}</text>` : '');
+const amt = pts[d] || 0, bh = amt > 0 ? Math.max((amt / maxVal) * 75, 2) : 2, x = 10 + (d - 1) * step, y = 85 - bh, col = amt > 0 ? catCol : '#2e333d', isSel = selDay === d;
+return `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="1.5" fill="${col}" stroke="${isSel ? '#fff' : 'none'}" stroke-width="1.5" style="cursor:pointer" onclick="selectDay(${d})"/>` + ((d % 5 === 0 || d === 1 || d === days) ? `<text x="${x+barW/2}" y="97" text-anchor="middle">${d}</text>` : '');
 }).join('');
 const selAmt = selDay ? (pts[selDay] || 0) : 0, dayBadge = selDay ? `<span style="border:1px solid rgba(255,255,255,0.2);background:rgba(15,17,21,0.85);padding:1px 7px;border-radius:6px;color:#f8fafc;font-size:11px">День <b>${selDay}</b>: ${flow==='inc'?'Доход +':'Расход '}<b>${fmt(selAmt)} ₽</b></span>` : '<span class="muted">Нажмите на столбец для деталей</span>';
 const planLine = (flow === 'exp' && hasCatPlan) ? `<line x1="10" y1="${planY}" x2="350" y2="${planY}" stroke="#f59e0b" stroke-dasharray="3,3" stroke-width="1"/><text x="348" y="${planY - 3}" text-anchor="end" fill="#f59e0b">${planLbl}</text>` : '';
@@ -166,7 +166,7 @@ const activeMonthsCount = isSelM ? 1 : Math.max(1, D.year_pts.filter(p => (p[2]?
 } else {
 const catLim = tab === "d" ? (c[3] > 0 ? Math.round(c[3] / D.meta.days_in_m) : 0) : c[3]; midVal = catLim > 0 ? `${fmt(catLim)} ₽` : "0 ₽ (вне плана)";
 }
-summaryCols = `<div><div class="muted">Сумма кат.</div><div style="color:#ff6961;font-weight:700">-${fmt(catAmt)} ₽</div></div><div><div class="muted">${midLbl}</div><div style="color:#f8fafc;font-weight:700">${midVal}</div></div><div><div class="muted">Доля периода</div><div style="color:#e2e8f0;font-weight:700">${pExp > 0 ? Math.round((catAmt / pExp) * 100) : 0}%</div></div>`;
+summaryCols = `<div><div class="muted">Сумма кат.</div><div style="color:#ff6961;font-weight:700">${catAmt > 0 ? '-' : ''}${fmt(catAmt)} ₽</div></div><div><div class="muted">${midLbl}</div><div style="color:#f8fafc;font-weight:700">${midVal}</div></div><div><div class="muted">Доля периода</div><div style="color:#e2e8f0;font-weight:700">${pExp > 0 ? Math.round((catAmt / pExp) * 100) : 0}%</div></div>`;
 } else {
 const ic = (D.inc_cats || [])[selCat], catAmt = tab === 'd' ? (D.day_inc || []).filter(t => t[1] === selCat).reduce((s, t) => s + t[2], 0) : (tab === 'm' ? (ic ? ic[2] : 0) : (isSelM ? (D.year_pts[selMonth][3]?.find(x => x[0] === selCat)?.[1] || 0) : D.year_pts.reduce((s, p) => s + (p[3]?.find(x => x[0] === selCat)?.[1] || 0), 0)));
 summaryCols = `<div><div class="muted">Сумма кат.</div><div style="color:#34d399;font-weight:700">+${fmt(catAmt)} ₽</div></div><div><div class="muted">${tab==='y'?'Сред. / мес':'Сумма'}</div><div style="color:#f8fafc;font-weight:700">${fmt(tab==='y'?Math.round(catAmt/12):catAmt)} ₽</div></div><div><div class="muted">Доля периода</div><div style="color:#e2e8f0;font-weight:700">${pInc > 0 ? Math.round((catAmt / pInc) * 100) : 0}%</div></div>`;
